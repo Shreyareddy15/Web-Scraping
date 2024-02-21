@@ -26,15 +26,15 @@ const searchAndScrapeHomes = async (searchString, cityName) => {
     console.log("Clicked on the home listing link");
 
     // Step 4: Select a city
-    await page.waitForSelector('.your-city-selector', { timeout: 60000 });
-    const citySelector = '#quickSearchLookup'; // Replace with the actual selector for selecting a city
+    // await page.waitForSelector('.your-city-selector', { timeout: 60000 });
+    // const citySelector = '#quickSearchLookup'; // Replace with the actual selector for selecting a city
     
-    await page.click(citySelector);
-    console.log("Selected a city");
+    // await page.click(citySelector);
+    // console.log("Selected a city");
 
-    // Step 5: Wait for the page to load after selecting a city
-    await page.waitForNavigation();
-    console.log("Page loaded after selecting a city");
+    // // Step 5: Wait for the page to load after selecting a city
+    // await page.waitForNavigation();
+    // console.log("Page loaded after selecting a city");
 
     // Step 6: Extract data for all homes with pagination
     const homeDataList = [];
