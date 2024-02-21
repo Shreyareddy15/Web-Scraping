@@ -8,13 +8,13 @@ const port = 3000;
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 
-const searchAndScrapeHomes = async (searchString) => {
+const searchAndScrapeHomes = async (searchString, cityName) => {
   const browser = await puppeteer.launch({ headless: false });
   const page = await browser.newPage();
 
   try {
     // Step 1: Directly initiate a search on Google
-    await page.goto(`https://www.google.com/search?q=${searchString}`, { timeout: 60000 });
+    await page.goto(`https://www.google.com/search?q=${searchString}${cityName}`, { timeout: 60000 });
 
     // Step 2: Wait for the search results page to load
     await page.waitForSelector('a[href^="https://www.example-homes-website.com"]', { timeout: 60000 });
@@ -25,9 +25,10 @@ const searchAndScrapeHomes = async (searchString) => {
     await page.waitForNavigation();
     console.log("Clicked on the home listing link");
 
-    // Step 4: Select a city (Modify as needed)
+    // Step 4: Select a city
     await page.waitForSelector('.your-city-selector', { timeout: 60000 });
-    const citySelector = '.your-city-selector'; // Replace with the actual selector for selecting a city
+    const citySelector = '#quickSearchLookup'; // Replace with the actual selector for selecting a city
+    
     await page.click(citySelector);
     console.log("Selected a city");
 
@@ -89,12 +90,13 @@ const searchAndScrapeHomes = async (searchString) => {
 // API endpoint
 app.post('/scrape-homes', async (req, res) => {
   const { searchString } = req.body;
+  const { cityName } = req.body;
 
   if (!searchString) {
     return res.status(400).json({ error: 'Search string is required.' });
   }
 
-  const homeDataList = await searchAndScrapeHomes(searchString);
+  const homeDataList = await searchAndScrapeHomes(searchString, cityName);
   res.json({ data: homeDataList });
 });
 
