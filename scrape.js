@@ -13,53 +13,34 @@ const searchAndScrapeHomes = async (searchString, cityName) => {
   const page = await browser.newPage();
 
   try {
-    // Step 1: Directly initiate a search on Google
-    await page.goto(`https://www.google.com/search?q=${searchString}${cityName}`, { timeout: 60000 });
+    // Step 1: Directly initiate a search on Apartments.com
+    await page.goto(`https://www.${searchString}/${cityName}`, { timeout: 60000 });
 
     // Step 2: Wait for the search results page to load
-    await page.waitForSelector('a[href^="https://www.example-homes-website.com"]', { timeout: 60000 });
+    await page.waitForSelector('.placardContainer', { timeout: 120000 });
+    await page.waitForNavigation({ waitUntil: 'domcontentloaded' });
 
-    // Step 3: Click on the link to the home listing website
-    const homesLink = await page.$('a[href^="https://www.example-homes-website.com"]');
-    await homesLink.click();
-    await page.waitForNavigation();
-    console.log("Clicked on the home listing link");
-
-    // Step 4: Select a city
-    await page.waitForSelector('.your-city-selector', { timeout: 60000 });
-    const citySelector = '#quickSearchLookup'; // Replace with the actual selector for selecting a city
-    
-    await page.click(citySelector);
-    console.log("Selected a city");
-
-    // Step 5: Wait for the page to load after selecting a city
-    await page.waitForNavigation();
-    console.log("Page loaded after selecting a city");
-
-    // Step 6: Extract data for all homes with pagination
+    // Step 3: Extract data for all homes with pagination
     const homeDataList = [];
     let hasNextPage = true;
     let pageNumber = 1;
 
     while (hasNextPage) {
+      // Extract data using page.evaluate
       const currentPageData = await page.evaluate(() => {
-        const homes = document.querySelectorAll('h1'); // Replace with the actual selector for home listings
+        const homes = document.querySelectorAll('.placardContainer');
 
-        return Array.from(homes).map(home => {
-          return {
-            price: home.querySelector('p')?.textContent.trim() || 'N/A',
-            address: home.querySelector('p')?.textContent.trim() || 'N/A',
-            bedrooms: home.querySelector('p')?.textContent.trim() || 'N/A',
-            baths: home.querySelector('p')?.textContent.trim() || 'N/A',
-            sqft: home.querySelector('p')?.textContent.trim() || 'N/A',
-          };
-        });
+        return Array.from(homes).map(home => ({
+          title: home.querySelector('.property-title')?.textContent.trim() || 'N/A',
+          price: home.querySelector('.property-pricing')?.textContent.trim() || 'N/A',
+          bedrooms: home.querySelector('.property-beds')?.textContent.trim() || 'N/A',
+        }));
       });
 
       homeDataList.push(...currentPageData);
 
       hasNextPage = await page.evaluate(() => {
-        const nextButton = document.querySelector('.pagination .next'); // Replace with the actual selector for the next button
+        const nextButton = document.querySelector('.next'); 
         if (nextButton) {
           nextButton.click();
           return true;
@@ -75,7 +56,7 @@ const searchAndScrapeHomes = async (searchString, cityName) => {
       }
 
       // Wait for a short time before navigating to the next page
-      await page.waitForTimeout(2000);
+      await new Promise(resolve => setTimeout(resolve, 2000));
     }
 
     return homeDataList;
